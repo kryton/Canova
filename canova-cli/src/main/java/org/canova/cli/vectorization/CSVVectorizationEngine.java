@@ -309,7 +309,8 @@ public class CSVVectorizationEngine extends VectorizationEngine {
           // dont append this to the output vector, skipping
           break;
         default:
-          //	log.info( " column value: " + columns[ srcColIndex ] );
+          //	log.info( "Key "+colKey+" column value: " + columns[ srcColIndex ] );
+
           double convertedColumn = colSchemaEntry.transformColumnValue(columns[srcColIndex].trim());
           // add this value to the output vector
           //ret.putScalar(dstColIndex, convertedColumn);

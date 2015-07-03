@@ -252,6 +252,14 @@ public class CSVSchemaColumn {
 	 */
 	public double binarize(String inputColumnValue) {
 
+		if ( inputColumnValue.equalsIgnoreCase("Y")) {
+			return 1.0;
+		}
+
+		if ( inputColumnValue.equalsIgnoreCase("N") || inputColumnValue.trim().isEmpty()) {
+			return 0.0;
+		}
+
 		double val = Double.parseDouble(inputColumnValue);
 
 		double range = this.maxValue - this.minValue;
@@ -274,14 +282,18 @@ public class CSVSchemaColumn {
 	 */
 	public double normalize(String inputColumnValue) {
 
+		if ( inputColumnValue.trim().isEmpty()) {
+			return (this.maxValue - this.minValue)/2 + this.minValue;
+		}
 		double val = Double.parseDouble(inputColumnValue);
 
 		double range = this.maxValue - this.minValue;
-		double normalizedOut = ( val - this.minValue ) / range;
-
 		if (0.0 == range) {
 			return 0.0;
 		}
+		double normalizedOut = ( val - this.minValue ) / range;
+
+
 
 		return normalizedOut;
 
