@@ -25,6 +25,7 @@ import java.io.FileReader;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import au.com.bytecode.opencsv.CSVParser;
 import com.google.common.base.Strings;
 import org.apache.commons.math3.util.Pair;
 import org.canova.cli.csv.schema.CSVSchemaColumn.TransformType;
@@ -36,7 +37,8 @@ import org.slf4j.LoggerFactory;
 */
 public class CSVInputSchema {
 
-  private static final Logger log = LoggerFactory.getLogger(CSVInputSchema.class);
+	private CSVParser csvParser;
+	private static final Logger log = LoggerFactory.getLogger(CSVInputSchema.class);
 
 	public String relation = "";
 	public String delimiter = "";
@@ -173,6 +175,7 @@ public class CSVInputSchema {
 		    }
 		    // line is not visible here.
 		}
+		csvParser = new CSVParser(this.delimiter.charAt(0));
 	}
 
 	/**
@@ -200,7 +203,7 @@ public class CSVInputSchema {
 
 		// does the record have the same number of columns that our schema expects?
 
-		String[] columns = csvRecordLine.split( this.delimiter );
+		String[] columns = csvParser.parseLine(csvRecordLine);
 
 		if (Strings.isNullOrEmpty(columns[0])) {
 			log.info("Skipping blank line");
@@ -217,12 +220,16 @@ public class CSVInputSchema {
 
 		for (Map.Entry<String, CSVSchemaColumn> entry : this.columnSchemas.entrySet()) {
 
-
 			String colKey = entry.getKey();
 		    CSVSchemaColumn colSchemaEntry = entry.getValue();
 
-		    // now work with key and value...
-		    colSchemaEntry.evaluateColumnValue( columns[ colIndex ] );
+			try {
+				// now work with key and value...
+				colSchemaEntry.evaluateColumnValue(columns[colIndex]);
+			} catch (NumberFormatException e) {
+				log.error( "Invalid number for column "+ colKey);
+				throw e;
+			}
 
 		    colIndex++;
 

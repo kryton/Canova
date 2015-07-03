@@ -20,6 +20,7 @@
 
 package org.canova.cli.vectorization;
 
+import au.com.bytecode.opencsv.CSVParser;
 import org.canova.api.conf.Configuration;
 import org.canova.api.exceptions.CanovaException;
 import org.canova.api.formats.output.OutputFormat;
@@ -50,13 +51,13 @@ import java.util.Map;
  * @author josh
  */
 public class CSVVectorizationEngine extends VectorizationEngine {
-
+  private CSVParser csvParser = new CSVParser();
   private static final Logger log = LoggerFactory.getLogger(CSVVectorizationEngine.class);
 
 
   private CSVInputSchema inputSchema = null;
   //private CSVVectorizationEngine vectorizer = null;
-  
+
 
   // this picks up the input schema file from the properties file and loads it
   private void loadInputSchemaFile() throws Exception {
@@ -67,16 +68,16 @@ public class CSVVectorizationEngine extends VectorizationEngine {
   }
 
   /**
-   * 
+   *
    * This is where our custom vectorization engine does its thing
- * @throws CanovaException 
- * @throws IOException 
- * @throws InterruptedException 
-   * 
+ * @throws CanovaException
+ * @throws IOException
+ * @throws InterruptedException
+   *
    */
   public void execute() throws CanovaException, IOException, InterruptedException {
-	  
-	  
+
+
 
 	  try {
 		this.loadInputSchemaFile();
@@ -86,14 +87,12 @@ public class CSVVectorizationEngine extends VectorizationEngine {
 		log.error("No schema loaded for CSV transforms.");
 		return;
 	}
-	  
-	  
-	  
-	  
-	  
+
+	  int linenum=0;
+
       // 1. Do a pre-pass to collect dataset statistics
       while (reader.hasNext()) {
-    	  
+    	  linenum++;
           Collection<Writable> w = reader.next();
 
           // TODO: this will end up processing key-value pairs
@@ -101,6 +100,8 @@ public class CSVVectorizationEngine extends VectorizationEngine {
               this.inputSchema.evaluateInputRecord(w.toArray()[0].toString());
           } catch (Exception e) {
               // TODO Auto-generated catch block
+              log.error("Exception on line "+linenum);
+              log.error("Exception line: "+w.toArray()[0].toString());
               e.printStackTrace();
           }
 
@@ -109,8 +110,8 @@ public class CSVVectorizationEngine extends VectorizationEngine {
       reader.close();
 
       // 2. computate the dataset statistics
-      this.inputSchema.computeDatasetStatistics();	  
-	  
+      this.inputSchema.computeDatasetStatistics();
+
       // 2.a. debug dataset stats
 /*      String schema_print_key = "canova.input.statistics.debug.print";
       if (null != this.configProps.get(schema_print_key)) {
@@ -121,13 +122,13 @@ public class CSVVectorizationEngine extends VectorizationEngine {
           }
       }
 */
-      
+
       if (this.printStats) {
     	  this.inputSchema.debugPringDatasetStatistics();
       }
-      
-      
-      
+
+
+
 
       // 1. make second pass to do transforms now that we have stats on the datasets
 
@@ -139,83 +140,89 @@ public class CSVVectorizationEngine extends VectorizationEngine {
       conf.set( OutputFormat.OUTPUT_PATH, this.outputFilename );
 
       if (shuffleOn) {
-    	  
+
     	  Shuffler shuffle = new Shuffler();
-    	  
+
 	      RecordWriter writer = outputFormat.createWriter(conf); //new SVMLightRecordWriter(tmpOutSVMLightFile,true);
-	  	
+
 	      while (reader.hasNext()) {
-	    	  
+
 	          Collection<Writable> w = reader.next();
-	
+
 	          String line = w.toArray()[0].toString();
 
 	          // TODO: we need to be re-using objects here for heap churn purposes
-	          
+
 	          if (!Strings.isNullOrEmpty(line)) {
 	          //    writer.write(this.vectorizeToWritable("", line, this.inputSchema));
 	        	  shuffle.addRecord( this.vectorizeToWritable("", line, this.inputSchema) );
 	          }
-	
+
 	      }
-	      
+
 			while (shuffle.hasNext()) {
-				
+
 				Collection<Writable> shuffledRecord = shuffle.next();
 				writer.write( shuffledRecord );
-				
+
 			}
-	      
-	
+
+
 	      reader.close();
-	      writer.close(); 
-    	  
-    	  
+	      writer.close();
+
+
       } else {
-      
+
 	      RecordWriter writer = outputFormat.createWriter(conf); //new SVMLightRecordWriter(tmpOutSVMLightFile,true);
-	
+          linenum =0;
 	      while (reader.hasNext()) {
-	    	  
+              linenum++;
 	          Collection<Writable> w = reader.next();
-	
+
 	          String line = w.toArray()[0].toString();
 	          // TODO: this will end up processing key-value pairs
-	
+
 	          // TODO: this is where the transform system would live (example: execute the filter transforms, etc, here)
-	          
+
 	          // this outputVector needs to be ND4J
 	          // TODO: we need to be re-using objects here for heap churn purposes
 	          //INDArray outputVector = this.vectorizer.vectorize( "", line, this.inputSchema );
 	          if (!Strings.isNullOrEmpty(line)) {
-	              writer.write(this.vectorizeToWritable("", line, this.inputSchema));
+                  try {
+                      writer.write(this.vectorizeToWritable("", line, this.inputSchema));
+                  } catch (Exception e) {
+                      log.error("Error Writing Line:"+linenum);
+                      throw  e;
+                  }
 	          }
-	
+
 	      }
-	
+
 	      reader.close();
-	      writer.close(); 
-	      
+	      writer.close();
+
       }
-      
-      
-      
-      
+
+
+
+
   }
-  
+
   /**
    * Use statistics collected from a previous pass to vectorize (or drop) each column
    *
    * @return
    */
-  public Collection<Writable> vectorize(String key, String value, CSVInputSchema schema) {
+  public Collection<Writable> vectorize(String key, String value, CSVInputSchema schema) throws IOException {
 
     //INDArray
     Collection<Writable> ret = new ArrayList<>();
 
     // TODO: this needs to be different (needs to be real vector representation
     //String outputVector = "";
-    String[] columns = value.split(schema.delimiter);
+    //String[] columns = value.split(schema.delimiter);
+      String[] columns = csvParser.parseLine(value);
 
     if (columns[0].trim().equals("")) {
       //	log.info("Skipping blank line");
@@ -268,7 +275,7 @@ public class CSVVectorizationEngine extends VectorizationEngine {
    *
    * @return
    */
-  public Collection<Writable> vectorizeToWritable(String key, String value, CSVInputSchema schema) {
+  public Collection<Writable> vectorizeToWritable(String key, String value, CSVInputSchema schema) throws IOException {
 
     //INDArray
     //INDArray ret = this.createArray( schema.getTransformedVectorSize() );
@@ -276,7 +283,8 @@ public class CSVVectorizationEngine extends VectorizationEngine {
 
     // TODO: this needs to be different (needs to be real vector representation
     //String outputVector = "";
-    String[] columns = value.split(schema.delimiter);
+   // String[] columns = value.split(schema.delimiter);
+    String[] columns = csvParser.parseLine(value);
 
     if (columns[0].trim().equals("")) {
       //	log.info("Skipping blank line");
