@@ -5,4 +5,4 @@
    @ATTRIBUTE sepalwidth   NUMERIC   !NORMALIZE
    @ATTRIBUTE petallength  NUMERIC   !NORMALIZE
    @ATTRIBUTE petalwidth   NUMERIC   !NORMALIZE
-   @ATTRIBUTE class        STRING   !LABEL
+   @ATTRIBUTE class        NOMINAL   !LABEL

@@ -1,6 +1,6 @@
 How to use Canova (generally):
 
-./canova vectorize -conf <conf_file>
+./bin/canova vectorize -conf <conf_file>
 
 If you just type the command, the full option list will print out.
 
@@ -10,18 +10,18 @@ Examples:
 
 CSV: UCI Iris
 
-./canova vectorize -conf examples/csv/UCI_Iris/conf/csv_conf.txt 
+./bin/canova vectorize -conf examples/csv/UCI_Iris/conf/csv_conf.txt 
 
 
 Text:
 
 Children's Books Example
 
-./canova vectorize -conf examples/text/ChildrensBooks/conf/childrens_book_conf.txt 
+./bin/canova vectorize -conf examples/text/ChildrensBooks/conf/childrens_book_conf.txt 
 
 Tweets Example
 
-./canova vectorize -conf examples/text/Tweets/conf/tweet_conf.txt 
+./bin/canova vectorize -conf examples/text/Tweets/conf/tweet_conf.txt 
 
 
 Image: LFW Dataset
@@ -64,5 +64,5 @@ canova.input.directory=/tmp/MNIST/images-idx1-ubyte
 
 4. Run Canova from bash
 
-./canova vectorize -conf examples/mnist/conf/mnist_conf.txt 
+./bin/canova vectorize -conf examples/mnist/conf/mnist_conf.txt 
 

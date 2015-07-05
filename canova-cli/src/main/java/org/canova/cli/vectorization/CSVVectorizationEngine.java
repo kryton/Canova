@@ -54,8 +54,10 @@ public class CSVVectorizationEngine extends VectorizationEngine {
   private CSVParser csvParser = new CSVParser();
   private static final Logger log = LoggerFactory.getLogger(CSVVectorizationEngine.class);
 
+  public static final String SKIP_HEADER_KEY = "canova.input.header.skip";
 
   private CSVInputSchema inputSchema = null;
+  private boolean skipHeader = false;
   //private CSVVectorizationEngine vectorizer = null;
 
 
@@ -65,6 +67,17 @@ public class CSVVectorizationEngine extends VectorizationEngine {
       this.inputSchema = new CSVInputSchema();
       this.inputSchema.parseSchemaFile(schemaFilePath);
   //    this.vectorizer = new CSVVectorizationEngine();
+
+      if (null != this.configProps.get( SKIP_HEADER_KEY )) {
+          String headerSkipString = (String) this.configProps.get( SKIP_HEADER_KEY );
+          if ("true".equals(headerSkipString.trim().toLowerCase())) {
+              this.skipHeader = true;
+          } else {
+        	  this.skipHeader = false;
+          }
+      }
+
+
   }
 
   /**
@@ -77,33 +90,46 @@ public class CSVVectorizationEngine extends VectorizationEngine {
    */
   public void execute() throws CanovaException, IOException, InterruptedException {
 
-
+	  long recordsRead = 0;
+	  long recordsWritten = 0;
 
 	  try {
 		this.loadInputSchemaFile();
 	} catch (Exception e1) {
 		// TODO Auto-generated catch block
 		//e1.printStackTrace();
-		log.error("No schema loaded for CSV transforms.");
-		return;
-	}
+		//System.out.println("There were issues with loading and parsing the vector schema: ");
+		//System.out.println( e1 );
 
-	  int linenum=0;
+		throw new CanovaException(e1.toString());
+
+		//return;
+	}
 
       // 1. Do a pre-pass to collect dataset statistics
       while (reader.hasNext()) {
-    	  linenum++;
-          Collection<Writable> w = reader.next();
 
-          // TODO: this will end up processing key-value pairs
-          try {
-              this.inputSchema.evaluateInputRecord(w.toArray()[0].toString());
-          } catch (Exception e) {
-              // TODO Auto-generated catch block
-              log.error("Exception on line "+linenum);
-              log.error("Exception line: "+w.toArray()[0].toString());
-              e.printStackTrace();
+
+          Collection<Writable> w = reader.next();
+              recordsRead++;
+
+          if (this.skipHeader && recordsRead == 1) {
+
+        	  System.out.println("Skipping Header: " + w.toArray()[0].toString());
+
+          } else {
+
+        	  try {
+		          this.inputSchema.evaluateInputRecord(w.toArray()[0].toString());
+		      } catch (Exception e) {
+                  log.error("Exception on line "+recordsRead);
+                  log.error("Exception line: "+w.toArray()[0].toString());
+		          e.printStackTrace();
+		      }
+
           }
+
+          recordsRead++;
 
       }
 
@@ -138,6 +164,7 @@ public class CSVVectorizationEngine extends VectorizationEngine {
 
       Configuration conf = new Configuration();
       conf.set( OutputFormat.OUTPUT_PATH, this.outputFilename );
+      boolean skippedHeaderYet = false;
 
       if (shuffleOn) {
 
@@ -145,17 +172,33 @@ public class CSVVectorizationEngine extends VectorizationEngine {
 
 	      RecordWriter writer = outputFormat.createWriter(conf); //new SVMLightRecordWriter(tmpOutSVMLightFile,true);
 
+
+
 	      while (reader.hasNext()) {
 
-	          Collection<Writable> w = reader.next();
+	          if (this.skipHeader && false == skippedHeaderYet) {
 
-	          String line = w.toArray()[0].toString();
+	        	  skippedHeaderYet = true;
+		          Collection<Writable> w = reader.next();
 
-	          // TODO: we need to be re-using objects here for heap churn purposes
 
-	          if (!Strings.isNullOrEmpty(line)) {
-	          //    writer.write(this.vectorizeToWritable("", line, this.inputSchema));
-	        	  shuffle.addRecord( this.vectorizeToWritable("", line, this.inputSchema) );
+	          } else {
+
+
+
+		          Collection<Writable> w = reader.next();
+
+		          String line = w.toArray()[0].toString();
+
+		          // TODO: we need to be re-using objects here for heap churn purposes
+
+		          if (!Strings.isNullOrEmpty(line)) {
+		          //    writer.write(this.vectorizeToWritable("", line, this.inputSchema));
+		        	  shuffle.addRecord( this.vectorizeToWritable("", line, this.inputSchema) );
+		          }
+
+		          recordsWritten++;
+
 	          }
 
 	      }
@@ -175,26 +218,35 @@ public class CSVVectorizationEngine extends VectorizationEngine {
       } else {
 
 	      RecordWriter writer = outputFormat.createWriter(conf); //new SVMLightRecordWriter(tmpOutSVMLightFile,true);
-          linenum =0;
 	      while (reader.hasNext()) {
-              linenum++;
-	          Collection<Writable> w = reader.next();
 
-	          String line = w.toArray()[0].toString();
-	          // TODO: this will end up processing key-value pairs
+              recordsWritten++;
+              Collection<Writable> w = reader.next();
 
-	          // TODO: this is where the transform system would live (example: execute the filter transforms, etc, here)
+	          if (this.skipHeader && !skippedHeaderYet) {
 
-	          // this outputVector needs to be ND4J
-	          // TODO: we need to be re-using objects here for heap churn purposes
-	          //INDArray outputVector = this.vectorizer.vectorize( "", line, this.inputSchema );
-	          if (!Strings.isNullOrEmpty(line)) {
-                  try {
-                      writer.write(this.vectorizeToWritable("", line, this.inputSchema));
-                  } catch (Exception e) {
-                      log.error("Error Writing Line:"+linenum);
-                      throw  e;
-                  }
+	        	  skippedHeaderYet = true;
+
+	          } else {
+
+		          String line = w.toArray()[0].toString();
+		          // TODO: this will end up processing key-value pairs
+
+		          // TODO: this is where the transform system would live (example: execute the filter transforms, etc, here)
+
+		          // this outputVector needs to be ND4J
+		          // TODO: we need to be re-using objects here for heap churn purposes
+		          //INDArray outputVector = this.vectorizer.vectorize( "", line, this.inputSchema );
+		          if (!Strings.isNullOrEmpty(line)) {
+                      try {
+
+                          writer.write(this.vectorizeToWritable("", line, this.inputSchema));
+                      } catch (Exception e) {
+                          log.error("Error Writing Line:"+recordsWritten);
+                          throw  e;
+                      }
+		          }
+
 	          }
 
 	      }
@@ -205,7 +257,8 @@ public class CSVVectorizationEngine extends VectorizationEngine {
       }
 
 
-
+      System.out.println( "CSV Lines Read: " + recordsRead );
+      System.out.println( "Vector Records Written: " + recordsWritten );
 
   }
 

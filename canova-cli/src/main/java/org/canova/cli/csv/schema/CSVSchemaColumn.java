@@ -46,6 +46,8 @@ TODO:
 
 
 
+
+
 */
 public class CSVSchemaColumn {
 
@@ -95,48 +97,53 @@ public class CSVSchemaColumn {
 	 */
 	public void evaluateColumnValue(String value) throws Exception {
 
-	//	System.out.println( "# evalColValue() => " + value );
-
-
+		/*
+		 * Need to get stats for the following transforms here:
+		 * 1. normalize
+		 * 2. binarize
+		 *
+		 */
 
 		if ( (ColumnType.NUMERIC == this.columnType|| ColumnType.NUMERICDEFAULT== this.columnType) &&  TransformType.LABEL != this.transform  ) {
+			// then we want to look at min/max values if the field isn't blank. (and allowed to be blank)
 
-			// then we want to look at min/max values
+			if ((ColumnType.NUMERICDEFAULT != this.columnType) || !value.trim().isEmpty()) {
 
-			double tmpVal;
-			if ((ColumnType.NUMERICDEFAULT == this.columnType) && value.trim().isEmpty()) {
-				tmpVal = ( this.maxValue - this.minValue )/2 + this.minValue;
-			} else {
+				double tmpVal;
 				tmpVal = Double.parseDouble(value);
+
+				// System.out.println( "converted: " + tmpVal );
+
+				if (Double.isNaN(tmpVal)) {
+					throw new Exception("The column was defined as Numeric yet could not be parsed as a Double");
+				}
+
+				if (Double.isNaN(this.minValue)) {
+
+					this.minValue = tmpVal;
+
+				} else if (tmpVal < this.minValue) {
+
+					this.minValue = tmpVal;
+
+				}
+
+				if (Double.isNaN(this.maxValue)) {
+
+					this.maxValue = tmpVal;
+
+				} else if (tmpVal > this.maxValue) {
+
+					this.maxValue = tmpVal;
+
+				}
 			}
 
-			// System.out.println( "converted: " + tmpVal );
+		} else if ( ColumnType.NOMINAL == this.columnType   ) {
 
-			if (Double.isNaN(tmpVal)) {
-				throw new Exception("The column was defined as Numeric yet could not be parsed as a Double");
-			}
+			// now we are dealing w a set of categories of a label
 
-			if ( Double.isNaN( this.minValue ) ) {
-
-				this.minValue = tmpVal;
-
-			} else if (tmpVal < this.minValue) {
-
-				this.minValue = tmpVal;
-
-			}
-
-			if ( Double.isNaN(this.maxValue) ) {
-
-				this.maxValue = tmpVal;
-
-			} else if (tmpVal > this.maxValue) {
-
-				this.maxValue = tmpVal;
-
-			}
-
-		} else if ( TransformType.LABEL == this.transform ) {
+		//} else if ( TransformType.LABEL == this.transform ) {
 
 		//	System.out.println( "> label '" + value + "' " );
 
@@ -202,7 +209,7 @@ public class CSVSchemaColumn {
 
 		}
 
-		return null;
+		return 0;
 
 	}
 
@@ -243,7 +250,26 @@ public class CSVSchemaColumn {
 
 
 	public double copy(String inputColumnValue) {
-		return Double.parseDouble(inputColumnValue);
+
+		double return_value = 0;
+
+		if (this.columnType == ColumnType.NUMERIC) {
+
+			return_value = Double.parseDouble( inputColumnValue );
+
+		} else {
+
+			// In the prep-pass all of the different strings are indexed
+			// copies the label index over as-is as a floating point value (1.0, 2.0, 3.0, ... N)
+
+			String key = inputColumnValue.trim();
+
+			return_value = this.getLabelID( key );
+
+
+		}
+
+		return return_value;
 	}
 
 	/*
@@ -282,20 +308,40 @@ public class CSVSchemaColumn {
 	 */
 	public double normalize(String inputColumnValue) {
 
-		if ( inputColumnValue.trim().isEmpty()) {
-			return (this.maxValue - this.minValue)/2 + this.minValue;
+		double return_value = 0;
+
+		if (this.columnType == ColumnType.NUMERIC) {
+			double range = this.maxValue - this.minValue;
+			if (0.0 == range) {
+				return_value = 0.0;
+			} else {
+				if (inputColumnValue.trim().isEmpty()) {
+					double avgValue = (this.maxValue - this.minValue) / 2 + this.minValue;
+					return_value = (avgValue - this.minValue) / range;
+				} else {
+					double val = Double.parseDouble(inputColumnValue);
+					double normalizedOut = (val - this.minValue) / range;
+					return_value = normalizedOut;
+				}
+			}
+
+		} else {
+
+			// we have a normalized list of labels
+
+			String key = inputColumnValue.trim();
+
+			double totalLabels = this.recordLabels.size();
+			double labelIndex = this.getLabelID( key ) + 1.0;
+
+			//System.out.println("Index Label: " + labelIndex);
+
+			return_value = labelIndex / totalLabels;
+
+
 		}
-		double val = Double.parseDouble(inputColumnValue);
 
-		double range = this.maxValue - this.minValue;
-		if (0.0 == range) {
-			return 0.0;
-		}
-		double normalizedOut = ( val - this.minValue ) / range;
-
-
-
-		return normalizedOut;
+		return return_value;
 
 	}
 
@@ -305,16 +351,26 @@ public class CSVSchemaColumn {
 	 */
 	public double label(String inputColumnValue) {
 
-		//this.recordLabels.
+		double return_value = 0;
 
-	//	System.out.println( ".lable() => '" + inputColumnValue.trim() + "' --- class count: " + this.recordLabels.size() );
+		if (this.columnType == ColumnType.NUMERIC) {
+			// TODO: Discuss if this is what you want. shouldn't numerics in this case just be treated like strings?
+			// In this case, same thing as !COPY --- uses input column numbers as the floating point label value
+			return_value = Double.parseDouble(inputColumnValue);
 
-		// TODO: how do get a numeric index from a list of labels?
-		Integer ID = this.getLabelID( inputColumnValue.trim() );
+		} else {
 
-	//	System.out.println("#### Label: " + ID );
+			// its a nominal value in the indexed list -> pull the index, return it as a double
 
-		return ID;
+			// TODO: how do get a numeric index from a list of labels?
+			Integer ID = this.getLabelID( inputColumnValue.trim() );
+
+			return_value = ID;
+
+		}
+
+
+		return return_value;
 
 	}
 

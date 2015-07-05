@@ -289,10 +289,23 @@ public class Vectorize implements SubCommand {
         VectorizationEngine engine = this.createVectorizationEngine();
         engine.initialize(split, inputFormat, this.createOutputFormat(), reader, this.createOutputFormat().createWriter(conf), this.configProps, this.outputVectorFilename, conf );
         
-        engine.execute();
+        boolean vectorizationComplete = true;
+        String failureString = "";
         
+        try {
+        	engine.execute();
+        } catch (CanovaException ce) {
+        	vectorizationComplete = false;
+        	failureString = ce.toString();
+        }
         
-        System.out.println( "Output vectors written to: " + this.outputVectorFilename );
+        if (!vectorizationComplete) {
+        	
+        	System.out.println( "Vectorization failed due to: \n" + failureString );
+        	
+        } else {
+        	System.out.println( "Output vectors written to: " + this.outputVectorFilename );
+        }
     }
 
 

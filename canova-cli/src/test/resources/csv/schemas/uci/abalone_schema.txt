@@ -9,4 +9,4 @@
    @ATTRIBUTE shuckedweight     NUMERIC         !NORMALIZE
    @ATTRIBUTE visceraweight     NUMERIC         !NORMALIZE
    @ATTRIBUTE shellweight       NUMERIC         !NORMALIZE
-   @ATTRIBUTE rings        	STRING   	!LABEL
+   @ATTRIBUTE rings        	NOMINAL   	!LABEL

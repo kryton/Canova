@@ -66,8 +66,42 @@ public class CSVInputSchema {
   }
 
 	private boolean validateAttributeLine( String[] lineParts ) {
-    return lineParts.length == 4;
-  }
+		
+		// first check that we have enough parts on the line
+		
+		if ( lineParts.length != 4 ) {
+			return false;
+		}
+		
+		// now check for combinations of { COLUMNTYPE, TRANSFORM } that we dont support
+		
+		CSVSchemaColumn colValue = this.parseColumnSchemaFromAttribute( lineParts );
+		
+		
+		// 1. Unsupported: { NUMERIC + LABEL }
+		
+		//if (colValue.columnType == CSVSchemaColumn.ColumnType.NUMERIC && colValue.transform == CSVSchemaColumn.TransformType.LABEL) { 
+		//	return false;
+		//}
+		
+
+		// 2. Unsupported: { NOMINAL + BINARIZE }
+
+		if (colValue.columnType == CSVSchemaColumn.ColumnType.NOMINAL && colValue.transform == CSVSchemaColumn.TransformType.BINARIZE) { 
+			return false;
+		}
+
+
+		// 3. Unsupported: { DATE + anything } --- date columns arent finished yet!
+		
+		if (colValue.columnType == CSVSchemaColumn.ColumnType.DATE ) { 
+			return false;
+		}
+		
+
+		
+		return true;
+	}
 
 	private boolean validateSchemaLine( String line ) {
 
@@ -160,13 +194,13 @@ public class CSVInputSchema {
 			this.columnSchemas.put( key, colValue );
 		}
 	}
-
+	
 	public void parseSchemaFile(String schemaPath) throws Exception {
 		try (BufferedReader br = new BufferedReader(new FileReader(schemaPath))) {
 		    for (String line; (line = br.readLine()) != null; ) {
 		        // process the line.
 		    	if (!this.validateSchemaLine(line) ) {
-		    		throw new Exception("Bad Schema for CSV Data");
+		    		throw new Exception("Bad Schema for CSV Data: \n\t" + line);
 		    	}
 
 		    	// now add it to the schema cache

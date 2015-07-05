@@ -3,7 +3,7 @@
 # Reference all jar files
 # params:
 
-export jar_name="/usr/local/Skymind/canova/lib/*:/usr/local/Skymind/nd4j/lib/$ND4J_BACKEND/*"
+export jar_name="./lib/*:./canova.jar"
 export main_class_name="org.canova.cli.driver.CommandLineInterfaceDriver"
 
 export params=""
