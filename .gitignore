@@ -6,6 +6,7 @@ application.home_IS_UNDEFINEiD
 README.md~
 *.jpg
 *.png
+/canova-cli/bin
 *.bin
 *.releaseBackup
 *.jpg
