@@ -66,40 +66,40 @@ public class CSVInputSchema {
   }
 
 	private boolean validateAttributeLine( String[] lineParts ) {
-		
+
 		// first check that we have enough parts on the line
-		
+
 		if ( lineParts.length != 4 ) {
 			return false;
 		}
-		
+
 		// now check for combinations of { COLUMNTYPE, TRANSFORM } that we dont support
-		
+
 		CSVSchemaColumn colValue = this.parseColumnSchemaFromAttribute( lineParts );
-		
-		
+
+
 		// 1. Unsupported: { NUMERIC + LABEL }
-		
-		//if (colValue.columnType == CSVSchemaColumn.ColumnType.NUMERIC && colValue.transform == CSVSchemaColumn.TransformType.LABEL) { 
+
+		//if (colValue.columnType == CSVSchemaColumn.ColumnType.NUMERIC && colValue.transform == CSVSchemaColumn.TransformType.LABEL) {
 		//	return false;
 		//}
-		
+
 
 		// 2. Unsupported: { NOMINAL + BINARIZE }
 
-		if (colValue.columnType == CSVSchemaColumn.ColumnType.NOMINAL && colValue.transform == CSVSchemaColumn.TransformType.BINARIZE) { 
+		if (colValue.columnType == CSVSchemaColumn.ColumnType.NOMINAL && colValue.transform == CSVSchemaColumn.TransformType.BINARIZE) {
 			return false;
 		}
 
 
 		// 3. Unsupported: { DATE + anything } --- date columns arent finished yet!
-		
-		if (colValue.columnType == CSVSchemaColumn.ColumnType.DATE ) { 
+
+		if (colValue.columnType == CSVSchemaColumn.ColumnType.DATE ) {
 			return false;
 		}
-		
 
-		
+
+
 		return true;
 	}
 
@@ -194,7 +194,7 @@ public class CSVInputSchema {
 			this.columnSchemas.put( key, colValue );
 		}
 	}
-	
+
 	public void parseSchemaFile(String schemaPath) throws Exception {
 		try (BufferedReader br = new BufferedReader(new FileReader(schemaPath))) {
 		    for (String line; (line = br.readLine()) != null; ) {
@@ -217,7 +217,7 @@ public class CSVInputSchema {
 	 *
 	 *
 	 *
-	 * @return
+	 * @return the number of columns
 	 */
 	public int getTransformedVectorSize() {
 
@@ -288,29 +288,34 @@ public class CSVInputSchema {
 		for (Map.Entry<String, CSVSchemaColumn> entry : this.columnSchemas.entrySet()) {
 
 			String key = entry.getKey();
-      CSVSchemaColumn value = entry.getValue();
+			CSVSchemaColumn value = entry.getValue();
 
-		  // now work with key and value...
+			// now work with key and value...
 
-		  log.info("> " + value.name + ", " + value.columnType + ", " + value.transform);
+			log.info("> " + value.name + ", " + value.columnType + ", " + value.transform);
 
-		  if ( value.transform == TransformType.LABEL ) {
+			if (value.transform == TransformType.LABEL) {
 
-			  log.info("\t> Label > Class Balance Report ");
+				log.info("\t> Label > Class Balance Report ");
+				if ( value.recordLabels.isEmpty()) {
+					log.info("\t\t>WARNING: labels are empty?");
+				} else {
 
-			  for (Map.Entry<String, Pair<Integer,Integer>> label : value.recordLabels.entrySet()) {
+					for (Map.Entry<String, Pair<Integer, Integer>> label : value.recordLabels.entrySet()) {
 
-			  	// value.recordLabels.size()
-			  	log.info("\t\t " + label.getKey() + ": " + label.getValue().getFirst() + ", " + label.getValue().getSecond());
+						// value.recordLabels.size()
+						log.info("\t\t " + label.getKey() + ": " + label.getValue().getFirst() + ", " + label.getValue().getSecond());
 
-			  }
+					}
+				}
 
-      } else {
+			} else if ( value.transform == TransformType.BINARIZE ) {
+				log.info("\t\tBINARY");
+			} else {
+				log.info("\t\tmin: {}", value.minValue);
+				log.info("\t\tmax: {}", value.maxValue);
 
-			    log.info("\t\tmin: {}", value.minValue);
-			    log.info("\t\tmax: {}", value.maxValue);
-
-		    }
+			}
 
 		}
 

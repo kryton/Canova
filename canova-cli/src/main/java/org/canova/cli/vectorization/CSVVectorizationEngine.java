@@ -90,6 +90,7 @@ public class CSVVectorizationEngine extends VectorizationEngine {
    */
   public void execute() throws CanovaException, IOException, InterruptedException {
 
+	  long recordsReadPrePass = 0;
 	  long recordsRead = 0;
 	  long recordsWritten = 0;
 
@@ -106,36 +107,36 @@ public class CSVVectorizationEngine extends VectorizationEngine {
 		//return;
 	}
 
+     log.info("Step 1. Pre-Pass to Collect dataset Stats");
       // 1. Do a pre-pass to collect dataset statistics
       while (reader.hasNext()) {
 
 
           Collection<Writable> w = reader.next();
-              recordsRead++;
+          recordsReadPrePass++;
 
-          if (this.skipHeader && recordsRead == 1) {
+          if (this.skipHeader && recordsReadPrePass == 1) {
 
-        	  System.out.println("Skipping Header: " + w.toArray()[0].toString());
+        	  log.debug("Skipping Header: " + w.toArray()[0].toString());
 
           } else {
 
         	  try {
 		          this.inputSchema.evaluateInputRecord(w.toArray()[0].toString());
 		      } catch (Exception e) {
-                  log.error("Exception on line "+recordsRead);
+                  log.error("Exception on line "+recordsReadPrePass);
                   log.error("Exception line: "+w.toArray()[0].toString());
 		          e.printStackTrace();
 		      }
 
           }
 
-          recordsRead++;
-
       }
 
       reader.close();
 
       // 2. computate the dataset statistics
+      log.info("Step 2. Compute the dataset statistics");
       this.inputSchema.computeDatasetStatistics();
 
       // 2.a. debug dataset stats
@@ -154,7 +155,7 @@ public class CSVVectorizationEngine extends VectorizationEngine {
       }
 
 
-
+      log.info("Step 3. Do Transforms");
 
       // 1. make second pass to do transforms now that we have stats on the datasets
 
@@ -165,6 +166,7 @@ public class CSVVectorizationEngine extends VectorizationEngine {
       Configuration conf = new Configuration();
       conf.set( OutputFormat.OUTPUT_PATH, this.outputFilename );
       boolean skippedHeaderYet = false;
+      log.info("Step 4. Write out the file");
 
       if (shuffleOn) {
 
@@ -175,17 +177,11 @@ public class CSVVectorizationEngine extends VectorizationEngine {
 
 
 	      while (reader.hasNext()) {
-
+              recordsRead++;
 	          if (this.skipHeader && false == skippedHeaderYet) {
-
 	        	  skippedHeaderYet = true;
 		          Collection<Writable> w = reader.next();
-
-
 	          } else {
-
-
-
 		          Collection<Writable> w = reader.next();
 
 		          String line = w.toArray()[0].toString();
@@ -196,7 +192,6 @@ public class CSVVectorizationEngine extends VectorizationEngine {
 		          //    writer.write(this.vectorizeToWritable("", line, this.inputSchema));
 		        	  shuffle.addRecord( this.vectorizeToWritable("", line, this.inputSchema) );
 		          }
-
 		          recordsWritten++;
 
 	          }
@@ -220,9 +215,8 @@ public class CSVVectorizationEngine extends VectorizationEngine {
 	      RecordWriter writer = outputFormat.createWriter(conf); //new SVMLightRecordWriter(tmpOutSVMLightFile,true);
 	      while (reader.hasNext()) {
 
-              recordsWritten++;
               Collection<Writable> w = reader.next();
-
+              recordsRead++;
 	          if (this.skipHeader && !skippedHeaderYet) {
 
 	        	  skippedHeaderYet = true;
@@ -241,6 +235,7 @@ public class CSVVectorizationEngine extends VectorizationEngine {
                       try {
 
                           writer.write(this.vectorizeToWritable("", line, this.inputSchema));
+                          recordsWritten++;
                       } catch (Exception e) {
                           log.error("Error Writing Line:"+recordsWritten);
                           throw  e;
@@ -257,8 +252,9 @@ public class CSVVectorizationEngine extends VectorizationEngine {
       }
 
 
-      System.out.println( "CSV Lines Read: " + recordsRead );
-      System.out.println( "Vector Records Written: " + recordsWritten );
+      log.info( "CSV Lines Read Phase 1: {}", recordsReadPrePass );
+      log.info( "CSV Lines Read Phase 2: {}" , recordsRead );
+      log.info( "Vector Records Written: {}" ,recordsWritten );
 
   }
 
@@ -332,6 +328,7 @@ public class CSVVectorizationEngine extends VectorizationEngine {
 
     //INDArray
     //INDArray ret = this.createArray( schema.getTransformedVectorSize() );
+
     Collection<Writable> ret = new ArrayList<>();
 
     // TODO: this needs to be different (needs to be real vector representation
@@ -362,7 +359,6 @@ public class CSVVectorizationEngine extends VectorizationEngine {
           // dont append this to the output vector, skipping
           break;
         default:
-          //	log.info( "Key "+colKey+" column value: " + columns[ srcColIndex ] );
 
           double convertedColumn = colSchemaEntry.transformColumnValue(columns[srcColIndex].trim());
           // add this value to the output vector

@@ -24,6 +24,8 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.apache.commons.math3.util.Pair;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /*
 
@@ -50,6 +52,7 @@ TODO:
 
 */
 public class CSVSchemaColumn {
+	private static final Logger log = LoggerFactory.getLogger(CSVSchemaColumn.class);
 
 	public enum ColumnType { NUMERIC, DATE, NOMINAL, STRING, NUMERICDEFAULT }
 	public enum TransformType { COPY, SKIP, BINARIZE, NORMALIZE, LABEL }
@@ -104,46 +107,49 @@ public class CSVSchemaColumn {
 		 *
 		 */
 
-		if ( (ColumnType.NUMERIC == this.columnType|| ColumnType.NUMERICDEFAULT== this.columnType) &&  TransformType.LABEL != this.transform  ) {
-			// then we want to look at min/max values if the field isn't blank. (and allowed to be blank)
+		if ( ColumnType.NUMERIC == this.columnType|| ColumnType.NUMERICDEFAULT== this.columnType) {
+			if ( TransformType.LABEL != this.transform  ) {
+				// then we want to look at min/max values if the field isn't blank. (and allowed to be blank)
 
-			if ((ColumnType.NUMERICDEFAULT != this.columnType) || !value.trim().isEmpty()) {
+				if ((ColumnType.NUMERICDEFAULT != this.columnType) || !value.trim().isEmpty()) {
 
-				double tmpVal;
-				tmpVal = Double.parseDouble(value);
+					double tmpVal;
+					tmpVal = Double.parseDouble(value);
 
-				// System.out.println( "converted: " + tmpVal );
+					// System.out.println( "converted: " + tmpVal );
 
-				if (Double.isNaN(tmpVal)) {
-					throw new Exception("The column was defined as Numeric yet could not be parsed as a Double");
-				}
+					if (Double.isNaN(tmpVal)) {
+						throw new Exception("The column was defined as Numeric yet could not be parsed as a Double");
+					}
 
-				if (Double.isNaN(this.minValue)) {
+					if (Double.isNaN(this.minValue)) {
 
-					this.minValue = tmpVal;
+						this.minValue = tmpVal;
 
-				} else if (tmpVal < this.minValue) {
+					} else if (tmpVal < this.minValue) {
 
-					this.minValue = tmpVal;
+						this.minValue = tmpVal;
 
-				}
+					}
 
-				if (Double.isNaN(this.maxValue)) {
+					if (Double.isNaN(this.maxValue)) {
 
-					this.maxValue = tmpVal;
+						this.maxValue = tmpVal;
 
-				} else if (tmpVal > this.maxValue) {
+					} else if (tmpVal > this.maxValue) {
 
-					this.maxValue = tmpVal;
+						this.maxValue = tmpVal;
 
+					}
 				}
 			}
 
 		} else if ( ColumnType.NOMINAL == this.columnType   ) {
-
+			// TODO define NOMINAL
+			log.info("We don't understand NOMINAL columnTypes yet");
 			// now we are dealing w a set of categories of a label
 
-		//} else if ( TransformType.LABEL == this.transform ) {
+		} else if ( TransformType.LABEL == this.transform ) {
 
 		//	System.out.println( "> label '" + value + "' " );
 
@@ -223,7 +229,7 @@ public class CSVSchemaColumn {
 
 		}
 
-	//	System.out.println( ".getLabelID() >> returning null with size: " + this.recordLabels.size() );
+		log.debug("Column:{}/{} .getLabelID() >> returning null for label {} with size:{} ",this.name, this.columnType, label, this.recordLabels.size());
 		return null;
 
 	}
@@ -243,7 +249,7 @@ public class CSVSchemaColumn {
 			case SKIP:
 				return 0.0; // but the vector engine has to remove this from output
 		}
-
+		log.error("TransformColumnValue called with invalid transform of:"+ this.transform + " and  inputColumnValue of:"+inputColumnValue);
 		return -1.0; // not good
 
 	}
@@ -310,7 +316,7 @@ public class CSVSchemaColumn {
 
 		double return_value = 0;
 
-		if (this.columnType == ColumnType.NUMERIC) {
+		if (this.columnType == ColumnType.NUMERIC || this.columnType == ColumnType.NUMERICDEFAULT) {
 			double range = this.maxValue - this.minValue;
 			if (0.0 == range) {
 				return_value = 0.0;
@@ -332,6 +338,7 @@ public class CSVSchemaColumn {
 			String key = inputColumnValue.trim();
 
 			double totalLabels = this.recordLabels.size();
+			Integer ID = this.getLabelID(key);
 			double labelIndex = this.getLabelID( key ) + 1.0;
 
 			//System.out.println("Index Label: " + labelIndex);
@@ -353,7 +360,7 @@ public class CSVSchemaColumn {
 
 		double return_value = 0;
 
-		if (this.columnType == ColumnType.NUMERIC) {
+		if (this.columnType == ColumnType.NUMERIC || this.columnType == ColumnType.NUMERICDEFAULT) {
 			// TODO: Discuss if this is what you want. shouldn't numerics in this case just be treated like strings?
 			// In this case, same thing as !COPY --- uses input column numbers as the floating point label value
 			return_value = Double.parseDouble(inputColumnValue);
@@ -364,6 +371,10 @@ public class CSVSchemaColumn {
 
 			// TODO: how do get a numeric index from a list of labels?
 			Integer ID = this.getLabelID( inputColumnValue.trim() );
+
+			if (ID == null) {
+				log.error("label:{} returned NULL -- inputColumnValue:{}", this.name, inputColumnValue);
+			}
 
 			return_value = ID;
 
