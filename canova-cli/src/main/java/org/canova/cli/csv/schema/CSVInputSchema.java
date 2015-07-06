@@ -22,10 +22,14 @@ package org.canova.cli.csv.schema;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
+import java.io.IOException;
+import java.io.Writer;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 import au.com.bytecode.opencsv.CSVParser;
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonGenerator;
 import com.google.common.base.Strings;
 import org.apache.commons.math3.util.Pair;
 import org.canova.cli.csv.schema.CSVSchemaColumn.TransformType;
@@ -281,6 +285,62 @@ public class CSVInputSchema {
 		this.hasComputedStats = true;
 	}
 
+	/**
+	 * Writes the Statistics we have generated to a JSON-formated file
+	 * TODO a function to read them back in.
+	 * @param w - the writer to write them out to
+     */
+	public void dumpDatasetStatisticsToFile(Writer w) throws IOException {
+		JsonFactory dumpFactory = new JsonFactory();
+		JsonGenerator dumpGenerator = dumpFactory.createGenerator(w);
+		dumpGenerator.writeStartObject();
+		dumpGenerator.writeFieldName("schema");
+		dumpGenerator.writeStartArray();
+		dumpGenerator.flush();
+		for (Map.Entry<String, CSVSchemaColumn> entry : this.columnSchemas.entrySet()) {
+			CSVSchemaColumn value = entry.getValue();
+
+			dumpGenerator.writeStartObject();
+			dumpGenerator.writeStringField("key", value.name);
+			dumpGenerator.writeStringField("type", value.columnType.toString());
+			dumpGenerator.writeStringField("transform", value.transform.toString());
+
+			switch ( value.transform) {
+				case LABEL:
+					dumpGenerator.writeFieldName("labels");
+					dumpGenerator.writeStartArray();
+					for (Map.Entry<String, Pair<Integer, Integer>> label : value.recordLabels.entrySet()) {
+						dumpGenerator.writeStartObject();
+						dumpGenerator.writeStringField("label", label.getKey());
+						dumpGenerator.writeNumberField("ID", label.getValue().getFirst());
+						dumpGenerator.writeNumberField("occurrences", label.getValue().getSecond());
+						dumpGenerator.writeEndObject();
+					}
+					dumpGenerator.writeEndArray();
+					break;
+				case NORMALIZE:
+					dumpGenerator.writeNumberField("min", value.minValue);
+					dumpGenerator.writeNumberField("max", value.maxValue);
+					break;
+				case BINARIZE:
+					break;
+				case SKIP:
+					break;
+				case COPY:
+					break;
+
+				default:
+					log.error("Unknown Transform Type of {}", value.transform);
+
+			}
+
+			dumpGenerator.writeEndObject();
+		}
+		dumpGenerator.writeEndArray();
+		dumpGenerator.writeEndObject();
+		dumpGenerator.flush();
+
+	}
 	public void debugPringDatasetStatistics() {
 
 		log.info("Print Schema --------");

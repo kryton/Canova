@@ -38,7 +38,9 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Strings;
 
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
@@ -152,6 +154,11 @@ public class CSVVectorizationEngine extends VectorizationEngine {
 
       if (this.printStats) {
     	  this.inputSchema.debugPringDatasetStatistics();
+      }
+      if (this.dumpStats) {
+          log.info("Step 2a. Dumping stats to file {}", this.statFilename);
+          Writer w = new FileWriter(this.statFilename);
+          this.inputSchema.dumpDatasetStatisticsToFile(w);
       }
 
 

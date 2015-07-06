@@ -13,7 +13,7 @@ import org.canova.api.split.InputSplit;
 import org.canova.cli.subcommands.Vectorize;
 
 public abstract class VectorizationEngine {
-	
+
 	protected InputFormat inputFormat = null;
 	protected OutputFormat outputFormat = null;
 	protected InputSplit split = null;
@@ -21,13 +21,15 @@ public abstract class VectorizationEngine {
 	protected RecordReader reader = null;
 	protected Properties configProps = null;
 	protected String outputFilename = null;
+	protected String statFilename = null;
 	protected Configuration conf = null;
 	protected boolean shuffleOn = false;
 	protected boolean normalizeData = true;
 	protected boolean printStats = false;
-	
+	protected boolean dumpStats = false;
+
 	public void initialize( InputSplit split, InputFormat inputFormat, OutputFormat outputFormat, RecordReader reader, RecordWriter writer, Properties configProps, String outputFilename, Configuration conf) {
-		
+
 		this.split = split;
 		this.reader = reader;
 		this.writer = writer;
@@ -36,64 +38,58 @@ public abstract class VectorizationEngine {
 		this.outputFormat = outputFormat;
 		this.outputFilename = outputFilename;
 		this.conf = conf;
-		
 
-	      if (null == this.configProps.get(Vectorize.SHUFFLE_DATA_FLAG)) {
-	      	// default to false
-	      } else {
-	    	  
-	      	String shuffleValue = (String) this.configProps.get(Vectorize.SHUFFLE_DATA_FLAG);
-	      	if ("true".equals(shuffleValue)) {
-	      		shuffleOn = true;
-	      	}
-	      	
-	      	System.out.println( "Shuffle was turned on for this dataset." );
-	      }		
-	      
-			
-			
-			
-	        if (null == this.configProps.get(Vectorize.NORMALIZE_DATA_FLAG)) {
-	        	// default to true
-	        } else {
-	        	String normalizeValue = (String) this.configProps.get(Vectorize.NORMALIZE_DATA_FLAG);
-	        	if ("false".equals(normalizeValue)) {
-	        		normalizeData = false;
-	        	}
-	        	
-	        	System.out.println( "Normalization was turned off for this dataset." );
-	        }
-			
-	        if (null != this.configProps.get(Vectorize.PRINT_STATS_FLAG)) {
-	            String printSchema = (String) this.configProps.get(Vectorize.PRINT_STATS_FLAG);
-	            if ("true".equals(printSchema.trim().toLowerCase())) {
-	                //this.debugLoadedConfProperties();
-	                //this.inputSchema.debugPringDatasetStatistics();
-	            	this.printStats = true;
-	            }
-	        }
-	        
-	      
-		
+
+		if (null != this.configProps.get(Vectorize.SHUFFLE_DATA_FLAG)) {
+			String shuffleValue = (String) this.configProps.get(Vectorize.SHUFFLE_DATA_FLAG);
+			if ("true".equals(shuffleValue)) {
+				shuffleOn = true;
+			}
+
+			System.out.println("Shuffle was turned on for this dataset.");
+		}
+
+
+		if (null != this.configProps.get(Vectorize.NORMALIZE_DATA_FLAG)) {
+			String normalizeValue = (String) this.configProps.get(Vectorize.NORMALIZE_DATA_FLAG);
+			if ("false".equals(normalizeValue)) {
+				normalizeData = false;
+			}
+
+			System.out.println("Normalization was turned off for this dataset.");
+		}
+
+		if (null != this.configProps.get(Vectorize.PRINT_STATS_FLAG)) {
+			String printSchema = (String) this.configProps.get(Vectorize.PRINT_STATS_FLAG);
+			if ("true".equals(printSchema.trim().toLowerCase())) {
+				//this.debugLoadedConfProperties();
+				//this.inputSchema.debugPringDatasetStatistics();
+				this.printStats = true;
+			}
+		}
+		if ( null != this.configProps.get(Vectorize.STATS_FILENAME_KEY)) {
+			this.statFilename = (String) this.configProps.get(Vectorize.STATS_FILENAME_KEY);
+			this.dumpStats = true;
+		}
 	}
-	
+
 	public abstract void execute() throws CanovaException, IOException, InterruptedException;
-	
+
 	/**
 	 * These two methods are stubbing the future vector transform transform system
-	 * 
-	 * We want to separate the transform logic from the inputformat/recordreader 
+	 *
+	 * We want to separate the transform logic from the inputformat/recordreader
 	 * 	-	example: a "thresholding" function that binarizes the vector entries
 	 * 	-	example: a sampling function that takes a larger images and down-samples the image into a small vector
-	 * 
+	 *
 	 */
 	public void addTransform() {
 		throw new UnsupportedOperationException();
 	}
-	
+
 	public void applyTransforms() {
 		throw new UnsupportedOperationException();
 	}
-	
+
 
 }
