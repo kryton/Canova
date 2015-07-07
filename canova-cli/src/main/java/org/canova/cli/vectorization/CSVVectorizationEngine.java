@@ -268,7 +268,7 @@ public class CSVVectorizationEngine extends VectorizationEngine {
   /**
    * Use statistics collected from a previous pass to vectorize (or drop) each column
    *
-   * @return
+   * @return a Collection of vectors
    */
   public Collection<Writable> vectorize(String key, String value, CSVInputSchema schema) throws IOException {
 
@@ -329,7 +329,7 @@ public class CSVVectorizationEngine extends VectorizationEngine {
   /**
    * Use statistics collected from a previous pass to vectorize (or drop) each column
    *
-   * @return
+   * @return a collection of vectors
    */
   public Collection<Writable> vectorizeToWritable(String key, String value, CSVInputSchema schema) throws IOException {
 
