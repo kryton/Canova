@@ -406,17 +406,13 @@ public class Vectorize implements SubCommand {
 
     		clazz = "org.canova.cli.vectorization.VideoVectorizationEngine";
 
-    	} else {
-            log.warn("Invalid Input for key {} of - {}. Using Default of {}/csv", INPUT_DATA_TYPE, inputDataType, clazz);
-    		// stick to default --- should blow up (?)
-    	}
-
-
-/*
-        if (null == clazz) {
-            clazz = DEFAULT_VECTORIZATION_ENGINE_CLASSNAME;
+    	}  else if ( inputDataType.isEmpty()) {
+            log.error("Invalid Input for key {} of - BLANK. Using Default of {}/csv", INPUT_DATA_TYPE, clazz);
         }
-*/
+        else {
+            clazz = inputDataType;
+            log.info("Vectorization Engine - Using Custom class {}", inputDataType);
+    	}
 
     //	log.debug("Running the " + clazz + " vectorization engine.");
 
