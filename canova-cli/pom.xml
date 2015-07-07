@@ -34,7 +34,7 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <nd4j.version>0.0.3.5.5.3</nd4j.version>
-        <slf4j.version>1.7.5</slf4j.version>
+        <slf4j.version>1.7.7</slf4j.version>
         <jackson.version>2.5.1</jackson.version>
     </properties>
 
