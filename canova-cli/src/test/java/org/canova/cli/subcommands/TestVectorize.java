@@ -103,6 +103,15 @@ public class TestVectorize {
         	System.out.println( "The images file exists locally unzipped!" );
         } else {
         	System.out.println( "The images file DOES NOT exist locally unzipped!" );
+        	System.out.println("Downloading and unzipping the MNIST dataset locally to: " + MNIST_ROOT );
+            try {
+				//new MnistFetcher().downloadAndUntar();
+            	downloadAndUntar();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+        	
         }		
 		
 	}
