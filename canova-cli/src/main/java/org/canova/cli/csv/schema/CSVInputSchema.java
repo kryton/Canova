@@ -89,14 +89,15 @@ public class CSVInputSchema {
 
 		// 2. Unsupported: { NOMINAL + BINARIZE }
 
-		if (colValue.columnType == CSVSchemaColumn.ColumnType.NOMINAL && colValue.transform == CSVSchemaColumn.TransformType.BINARIZE) {
-			return false;
-		}
+	//	if (colValue.columnType == CSVSchemaColumn.ColumnType.NOMINAL && colValue.transform == CSVSchemaColumn.TransformType.BINARIZE) {
+	//		return false;
+	//	}
 
 
 		// 3. Unsupported: { DATE + anything } --- date columns arent finished yet!
 
 		if (colValue.columnType == CSVSchemaColumn.ColumnType.DATE ) {
+			log.error("DATE column types aren't supported yet");
 			return false;
 		}
 

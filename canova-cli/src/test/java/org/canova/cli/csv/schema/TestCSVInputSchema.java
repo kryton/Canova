@@ -32,33 +32,33 @@ public class TestCSVInputSchema {
 		String schemaFilePath = "src/test/resources/csv/schemas/unit_test_schema.txt";
 		CSVInputSchema inputSchema = new CSVInputSchema();
 		inputSchema.parseSchemaFile( schemaFilePath );
-		
+
 		inputSchema.debugPrintColumns();
-		
+
 		assertEquals( ",", inputSchema.delimiter );
 		assertEquals( "SytheticDatasetUnitTest", inputSchema.relation );
-		
+
 		assertEquals( CSVSchemaColumn.ColumnType.NUMERIC, inputSchema.getColumnSchemaByName( "sepallength" ).columnType );
 		assertEquals( CSVSchemaColumn.TransformType.COPY, inputSchema.getColumnSchemaByName( "sepallength" ).transform );
-		
+
 		assertEquals( null, inputSchema.getColumnSchemaByName("foo") );
 
 		assertEquals( CSVSchemaColumn.ColumnType.NOMINAL, inputSchema.getColumnSchemaByName( "class" ).columnType );
 		assertEquals( CSVSchemaColumn.TransformType.LABEL, inputSchema.getColumnSchemaByName( "class" ).transform );
-		
-		
+
+
 	}
-	
+
 	@Test
 	public void testLoadingUnsupportedSchemas() throws Exception {
-	
+
 		boolean caughtException_0 = false;
 		boolean caughtException_1 = false;
 		boolean caughtException_2 = false;
-		
+
 		String schemaFilePath = "";
 		CSVInputSchema inputSchema = null;
-		
+
 		// 1. Unsupported: { NUMERIC + LABEL }
 		/*
 		String schemaFilePath = "src/test/resources/csv/schemas/csv_unsupported_schema_0.txt";
@@ -70,8 +70,9 @@ public class TestCSVInputSchema {
 		}
 		*/
 
-		
+
 		// 2. Unsupported: { NOMINAL + BINARIZE }
+		// these are now supported. so we expect NO exception here
 
 		schemaFilePath = "src/test/resources/csv/schemas/csv_unsupported_schema_1.txt";
 		inputSchema = new CSVInputSchema();
@@ -80,10 +81,10 @@ public class TestCSVInputSchema {
 		} catch (Exception e) {
 			caughtException_1 = true;
 		}
-		
-		
+
+
 		// 3. Unsupported: { DATE + anything } --- date columns arent finished yet!
-		
+
 		schemaFilePath = "src/test/resources/csv/schemas/csv_unsupported_schema_2.txt";
 		inputSchema = new CSVInputSchema();
 		try {
@@ -91,11 +92,11 @@ public class TestCSVInputSchema {
 		} catch (Exception e) {
 			caughtException_2 = true;
 		}
-		
+
 		//assertEquals( true, caughtException_0 );
-		assertEquals( true, caughtException_1 );
+		assertEquals( false, caughtException_1 );
 		assertEquals( true, caughtException_2 );
-		
+
 	}
 
 	@Test
@@ -103,7 +104,7 @@ public class TestCSVInputSchema {
 
 		String schemaFilePath = "";
 		CSVInputSchema inputSchema = null;
-/*		
+/*
 		schemaFilePath = "src/test/resources/csv/schemas/csv_unsupported_schema_2.txt";
 		inputSchema = new CSVInputSchema();
 		try {
@@ -111,42 +112,42 @@ public class TestCSVInputSchema {
 		} catch (Exception e) {
 			caughtException_2 = true;
 		}
-	*/	
-		
+	*/
+
 		// { NUMERIC + NORMALIZE }
 
-		
-		// { NUMERIC + BINARIZE }		
-		
 
-		// { NUMERIC + COPY }		
-		
-		
+		// { NUMERIC + BINARIZE }
+
+
+		// { NUMERIC + COPY }
+
+
 		// { NUMERIC + LABEL }: same as copy
 
-		
-		// { NUMERIC + LABEL }		
-		
+
+		// { NUMERIC + LABEL }
+
 	}
-	
+
 	@Test
 	public void testEvaluateCSVRecords_NominalColumns() {
 
 		// { NOMINAL + NORMALIZE }
 
-		
-		// { NOMINAL + BINARIZE }: Unsupported	
-		
 
-		// { NOMINAL + COPY }		
-		
-		
-		// { NOMINAL + LABEL }		
+		// { NOMINAL + BINARIZE }: Unsupported
 
-		
-		// { NOMINAL + LABEL }		
-		
+
+		// { NOMINAL + COPY }
+
+
+		// { NOMINAL + LABEL }
+
+
+		// { NOMINAL + LABEL }
+
 	}
-	
-	
+
+
 }
