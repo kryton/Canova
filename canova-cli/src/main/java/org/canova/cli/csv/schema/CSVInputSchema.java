@@ -69,17 +69,15 @@ public class CSVInputSchema {
     return lineParts.length == 2;
   }
 
-	private boolean validateAttributeLine( String[] lineParts ) {
+	protected boolean validateAttributeLine( String[] lineParts ) {
 
-		// first check that we have enough parts on the line
-
-		if ( lineParts.length != 4 ) {
-			return false;
-		}
 
 		// now check for combinations of { COLUMNTYPE, TRANSFORM } that we dont support
 
 		CSVSchemaColumn colValue = this.parseColumnSchemaFromAttribute( lineParts );
+		if (colValue == null) {
+			return false;
+		}
 
 
 		// 1. Unsupported: { NUMERIC + LABEL }
@@ -155,12 +153,16 @@ public class CSVInputSchema {
 
 	/**
 	 * parse out lines like:
-	 * 		@ATTRIBUTE sepallength  NUMERIC   !COPY
+ 	 * 	\@ATTRIBUTE sepallength  NUMERIC   !COPY
 	 *
-	 * @param parts
-	 * @return
+	 * @param parts the attribute line
+	 * @return NULL on error, or the CSVSchemaColumn
 	 */
-	private CSVSchemaColumn parseColumnSchemaFromAttribute( String[] parts ) {
+	protected CSVSchemaColumn parseColumnSchemaFromAttribute( String[] parts ) {
+		if ( parts.length != 4 ) {
+			log.error("Invalid Schema line {}", parts);
+			return null;
+		}
 
 		String columnName = parts[1];
 		String columnType = parts[2];
@@ -174,7 +176,7 @@ public class CSVInputSchema {
 		return new CSVSchemaColumn( columnName, colTypeEnum, colTransformEnum );
 	}
 
-	private void addSchemaLine( String line ) {
+	private void addSchemaLine( String line ) throws Exception {
 
 		// parse out: columnName, columnType, columnTransform
 		String lineCondensed = line.trim().replaceAll(" +", " ");
@@ -194,6 +196,9 @@ public class CSVInputSchema {
 
 			String key = parts[1];
 			CSVSchemaColumn colValue = this.parseColumnSchemaFromAttribute( parts );
+			if (colValue == null) {
+				throw new Exception("Bad Call to add SchemaLine :"+ line);
+			}
 
 			this.columnSchemas.put( key, colValue );
 		}

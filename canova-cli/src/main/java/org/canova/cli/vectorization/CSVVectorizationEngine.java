@@ -57,15 +57,16 @@ public class CSVVectorizationEngine extends VectorizationEngine {
   private static final Logger log = LoggerFactory.getLogger(CSVVectorizationEngine.class);
 
   public static final String SKIP_HEADER_KEY = "canova.input.header.skip";
+  public static final String INPUT_VECTOR_SCHEMA = "canova.input.vector.schema";
 
-  private CSVInputSchema inputSchema = null;
-  private boolean skipHeader = false;
+  protected CSVInputSchema inputSchema = null;
+  protected boolean skipHeader = false;
   //private CSVVectorizationEngine vectorizer = null;
 
 
   // this picks up the input schema file from the properties file and loads it
-  private void loadInputSchemaFile() throws Exception {
-      String schemaFilePath = (String) this.configProps.get("canova.input.vector.schema");
+  protected void loadInputSchemaFile() throws Exception {
+      String schemaFilePath = (String) this.configProps.get(INPUT_VECTOR_SCHEMA);
       this.inputSchema = new CSVInputSchema();
       this.inputSchema.parseSchemaFile(schemaFilePath);
   //    this.vectorizer = new CSVVectorizationEngine();

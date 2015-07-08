@@ -144,12 +144,7 @@ public class CSVSchemaColumn {
 				}
 			}
 
-		} else if ( ColumnType.NOMINAL == this.columnType   ) {
-			// TODO define NOMINAL
-			log.info("We don't understand NOMINAL columnTypes yet");
-			// now we are dealing w a set of categories of a label
-
-		} else if ( TransformType.LABEL == this.transform ) {
+		} else if ( ColumnType.NOMINAL == this.columnType || TransformType.LABEL == this.transform ) {
 
 		//	System.out.println( "> label '" + value + "' " );
 
@@ -175,6 +170,8 @@ public class CSVSchemaColumn {
 
 			}
 
+		} else {
+			throw new Exception("Unknown ColumnType / Transform type combination "+this.columnType+"/"+ this.transform);
 		}
 
 	}
