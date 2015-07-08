@@ -108,39 +108,37 @@ public class CSVSchemaColumn {
 		 */
 
 		if ( ColumnType.NUMERIC == this.columnType|| ColumnType.NUMERICDEFAULT== this.columnType) {
-			if ( TransformType.LABEL != this.transform  ) {
-				// then we want to look at min/max values if the field isn't blank. (and allowed to be blank)
+			// then we want to look at min/max values if the field isn't blank. (and allowed to be blank)
 
-				if ((ColumnType.NUMERICDEFAULT != this.columnType) || !value.trim().isEmpty()) {
+			if ((ColumnType.NUMERICDEFAULT != this.columnType) || !value.trim().isEmpty()) {
 
-					double tmpVal;
-					tmpVal = Double.parseDouble(value);
+				double tmpVal;
+				tmpVal = Double.parseDouble(value);
 
-					// System.out.println( "converted: " + tmpVal );
+				// System.out.println( "converted: " + tmpVal );
 
-					if (Double.isNaN(tmpVal)) {
-						throw new Exception("The column was defined as Numeric yet could not be parsed as a Double");
-					}
+				if (Double.isNaN(tmpVal)) {
+					throw new Exception("The column was defined as Numeric yet could not be parsed as a Double");
+				}
 
-					if (Double.isNaN(this.minValue)) {
+				if (Double.isNaN(this.minValue)) {
 
-						this.minValue = tmpVal;
+					this.minValue = tmpVal;
 
-					} else if (tmpVal < this.minValue) {
+				} else if (tmpVal < this.minValue) {
 
-						this.minValue = tmpVal;
+					this.minValue = tmpVal;
 
-					}
+				}
 
-					if (Double.isNaN(this.maxValue)) {
+				if (Double.isNaN(this.maxValue)) {
 
-						this.maxValue = tmpVal;
+					this.maxValue = tmpVal;
 
-					} else if (tmpVal > this.maxValue) {
+				} else if (tmpVal > this.maxValue) {
 
-						this.maxValue = tmpVal;
+					this.maxValue = tmpVal;
 
-					}
 				}
 			}
 
