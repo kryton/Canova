@@ -313,7 +313,10 @@ public class CSVInputSchema {
 
 			switch ( value.transform) {
 				case LABEL:
+				case COPY:
+					dumpGenerator.writeNumberField("size", value.recordLabels.size());
 					dumpGenerator.writeFieldName("labels");
+
 					dumpGenerator.writeStartArray();
 					for (Map.Entry<String, Pair<Integer, Integer>> label : value.recordLabels.entrySet()) {
 						dumpGenerator.writeStartObject();
@@ -323,6 +326,7 @@ public class CSVInputSchema {
 						dumpGenerator.writeEndObject();
 					}
 					dumpGenerator.writeEndArray();
+
 					break;
 				case NORMALIZE:
 					dumpGenerator.writeNumberField("min", value.minValue);
@@ -331,8 +335,6 @@ public class CSVInputSchema {
 				case BINARIZE:
 					break;
 				case SKIP:
-					break;
-				case COPY:
 					break;
 
 				default:
