@@ -141,7 +141,6 @@ public class CSVSchemaColumn {
 
 				}
 			}
-
 		} else if ( ColumnType.NOMINAL == this.columnType || TransformType.LABEL == this.transform ) {
 
 		//	System.out.println( "> label '" + value + "' " );
@@ -168,7 +167,8 @@ public class CSVSchemaColumn {
 
 			}
 
-		} else {
+		} else if (TransformType.BINARIZE != this.transform) {
+			// BINARIZE doesn't require validation .. min/max etc..
 			throw new Exception("Unknown ColumnType / Transform type combination "+this.columnType+"/"+ this.transform);
 		}
 
