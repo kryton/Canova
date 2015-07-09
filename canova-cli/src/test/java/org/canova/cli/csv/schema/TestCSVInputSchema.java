@@ -48,6 +48,21 @@ public class TestCSVInputSchema {
 
 
 	}
+	@Test
+	public void testLoadAndValidateNumericDefaults() throws Exception {
+		String schemaFilePath = "src/test/resources/csv/schemas/uci/iris_numericdefault.txt";
+		CSVInputSchema inputSchema = new CSVInputSchema();
+		inputSchema.parseSchemaFile( schemaFilePath );
+
+		inputSchema.debugPrintColumns();
+
+		assertEquals( ",", inputSchema.delimiter );
+		assertEquals( "UCIIrisDataset", inputSchema.relation );
+
+		assertEquals( CSVSchemaColumn.ColumnType.NUMERICDEFAULT, inputSchema.getColumnSchemaByName( "sepalwidth" ).columnType );
+		assertEquals( CSVSchemaColumn.TransformType.NORMALIZE, inputSchema.getColumnSchemaByName( "sepalwidth" ).transform );
+
+	}
 
 	@Test
 	public void testLoadingUnsupportedSchemas() throws Exception {
