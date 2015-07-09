@@ -54,7 +54,7 @@ TODO:
 public class CSVSchemaColumn {
 	private static final Logger log = LoggerFactory.getLogger(CSVSchemaColumn.class);
 
-	public enum ColumnType { NUMERIC, DATE, NOMINAL, STRING, NUMERICDEFAULT }
+	public enum ColumnType { NUMERIC, DATE, NOMINAL, NUMERICDEFAULT }
 	public enum TransformType { COPY, SKIP, BINARIZE, NORMALIZE, LABEL }
 
 	public String name = ""; // the name of the attribute/column
