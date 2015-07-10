@@ -63,16 +63,17 @@ public class SVMLightRecordWriter extends FileRecordWriter {
 
             // get only the non-zero entries
             Double value = 0.0;
-            
+
             for (int i = 0; i < recordList.size() - 1; i++) {
 
                 value = Double.valueOf(recordList.get(i).toString());
 
-                if ( value > 0.0 ) {
-                	result.append(" " + (i + 1) + ":"
-                        + Double.valueOf(recordList.get(i).toString()));
-                }
-                
+                // TODO make this sparse. the blocker here is ND4J not supporting sparse files.
+                // Issue in tracked here - https://github.com/deeplearning4j/nd4j/issues/202
+                //if ( value > 0.0 ) {
+                	result.append(" ").append(i + 1).append(":").append(Double.valueOf(recordList.get(i).toString()));
+                //}
+
             }
 
             out.write(result.toString().getBytes());

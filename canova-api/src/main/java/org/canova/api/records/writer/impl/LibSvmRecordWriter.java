@@ -75,13 +75,15 @@ public class LibSvmRecordWriter extends LineRecordWriter implements LibSvm {
         for(int i = 0; i < asList.size() - 1; i++) {
             //sparse format
             double val = Double.valueOf(asList.get(i).toString());
-            if(val == 0.0)
-                continue;
+            // TODO make this sparse. the blocker here is ND4J not supporting sparse files.
+            // Issue in tracked here - https://github.com/deeplearning4j/nd4j/issues/202
+            //if(val == 0.0)
+            //    continue;
             try {
-                write.append((i + 1)  + ":" + Integer.valueOf(asList.get(i).toString()));
+                write.append(i + 1).append(":").append(Integer.valueOf(asList.get(i).toString()));
             }
             catch(NumberFormatException e) {
-                write.append((i + 1)  + ":" + Double.valueOf(asList.get(i).toString()));
+                write.append(i + 1).append(":").append(Double.valueOf(asList.get(i).toString()));
 
             }
             if(i < asList.size() - 1)
