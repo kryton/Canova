@@ -25,6 +25,7 @@ import static org.junit.Assert.*;
 
 import org.apache.commons.io.IOUtils;
 
+import org.canova.api.conf.Configuration;
 import org.canova.api.records.reader.RecordReader;
 import org.canova.api.records.writer.RecordWriter;
 import org.canova.api.records.writer.impl.SVMLightRecordWriter;
@@ -96,6 +97,17 @@ public class SVMRecordWriterTest {
 
 
 
+    }
+
+    @Test
+    public void testSparseData() throws Exception {
+        RecordReader svmLightRecordReader = new SVMLightRecordReader();
+        Configuration conf = new Configuration();
+        conf.set(SVMLightRecordReader.NUM_ATTRIBUTES,"784");
+        svmLightRecordReader.initialize(conf, new FileSplit(new ClassPathResource("mnist_svmlight.txt").getFile()));
+        assertTrue(svmLightRecordReader.hasNext());
+        Collection<Writable> record = svmLightRecordReader.next();
+        assertEquals(785,record.size());
     }
 
 

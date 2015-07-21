@@ -122,6 +122,30 @@ public class ImageLoader implements Serializable {
     }
 
     /**
+     * Convert the given image to an rgb image
+     * @param arr the array to use
+     * @param image the iamge to set
+     */
+    public void toBufferedImageRGB(INDArray arr,BufferedImage image) {
+        if(arr.rank() < 3)
+            throw new IllegalArgumentException("Arr must be 3d");
+
+        if (arr.size(-2) > 0 && arr.size(-1) > 0)
+            image = toBufferedImage(image.getScaledInstance(arr.size(-2),arr.size(-1), Image.SCALE_SMOOTH));
+        for (int i = 0; i < image.getWidth(); i++) {
+            for (int j = 0; j < image.getHeight(); j++) {
+                int r = arr.slice(0).getInt(i,j);
+                int g = arr.slice(1).getInt(i,j);
+                int b = arr.slice(2).getInt(i,j);
+                int a = 1;
+                int col = (a << 24) | (r << 16) | (g << 8) | b;
+                image.setRGB(i,j,col);
+            }
+        }
+
+    }
+
+    /**
      * Convert an input stream to an rgb spectrum image
      *
      * @param inputStream the input stream to convert

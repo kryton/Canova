@@ -46,7 +46,7 @@ public class LineRecordReader implements RecordReader {
     private URI[] locations;
     private int currIndex = 0;
     private Iterator<String> iter;
-
+    protected Configuration conf;
 
     @Override
     public void initialize(InputSplit split) throws IOException, InterruptedException {
@@ -113,11 +113,11 @@ public class LineRecordReader implements RecordReader {
 
     @Override
     public void setConf(Configuration conf) {
-
+       this.conf = conf;
     }
 
     @Override
     public Configuration getConf() {
-        return null;
+        return conf;
     }
 }
