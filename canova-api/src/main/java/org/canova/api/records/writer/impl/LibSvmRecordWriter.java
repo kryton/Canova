@@ -78,12 +78,12 @@ public class LibSvmRecordWriter extends LineRecordWriter implements LibSvm {
            
             if(val == 0.0)
                 continue;
+            write.append(i + 1).append(":");
             try {
-                write.append(i + 1).append(":").append(Integer.valueOf(asList.get(i).toString()));
+                write.append(Integer.valueOf(asList.get(i).toString()));
             }
             catch(NumberFormatException e) {
-                write.append(i + 1).append(":").append(Double.valueOf(asList.get(i).toString()));
-
+                write.append(Double.valueOf(asList.get(i).toString()));
             }
             if(i < asList.size() - 1)
                 write.append(" ");
