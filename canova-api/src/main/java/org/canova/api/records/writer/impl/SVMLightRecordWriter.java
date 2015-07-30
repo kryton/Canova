@@ -68,11 +68,9 @@ public class SVMLightRecordWriter extends FileRecordWriter {
 
                 value = Double.valueOf(recordList.get(i).toString());
 
-                // TODO make this sparse. the blocker here is ND4J not supporting sparse files.
-                // Issue in tracked here - https://github.com/deeplearning4j/nd4j/issues/202
-                //if ( value > 0.0 ) {
+                if ( value > 0.0 ) {
                 	result.append(" ").append(i + 1).append(":").append(Double.valueOf(recordList.get(i).toString()));
-                //}
+                }
 
             }
 
