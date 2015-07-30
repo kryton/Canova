@@ -85,7 +85,7 @@ public class SVMLightRecordReader extends LineRecordReader {
 
             // 1. class
             double classVal = Double.parseDouble(tok.nextToken());
-            int numRecordsAdded = 0;
+            int numAttributesAdded = 0;
             // 2. attributes
             while (tok.hasMoreTokens()) {
                 col  = tok.nextToken();
@@ -96,18 +96,18 @@ public class SVMLightRecordReader extends LineRecordReader {
                 if (col.startsWith("qid:"))
                     continue;
                 // actual value
-                index = Integer.parseInt(col.substring(0, col.indexOf(":")));
-                if(index > numRecordsAdded) {
-                    int totalDiff = Math.abs(numRecordsAdded - index);
-                    for(int i = numRecordsAdded; i < index; i++) {
+                index = Integer.parseInt(col.substring(0, col.indexOf(":"))) - 1;
+                if(index > numAttributesAdded) {
+                    int totalDiff = Math.abs(numAttributesAdded - index);
+                    for(int i = numAttributesAdded; i < index; i++) {
                         ret.add(new DoubleWritable(0.0));
 
                     }
-                    numRecordsAdded += totalDiff;
+                    numAttributesAdded += totalDiff;
                 }
                 value = Double.parseDouble(col.substring(col.indexOf(":") + 1));
                 ret.add(new DoubleWritable(value));
-                numRecordsAdded++;
+                numAttributesAdded++;
             }
 
             if(numAttributes >= 1 && ret.size() < numAttributes) {

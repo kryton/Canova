@@ -64,16 +64,13 @@ public class SVMRecordWriterTest {
         RecordReader reader = new CSVRecordReader();
         List<Collection<Writable>> records = new ArrayList<>();
         reader.initialize(split);
-        int count = 0;
         while(reader.hasNext()) {
             Collection<Writable> record = reader.next();
-            records.add(record);
             assertEquals(5, record.size());
             records.add(record);
-            count++;
         }
 
-        assertEquals(150,count);
+        assertEquals(150,records.size());
         File out = new File("iris_out.txt");
         out.deleteOnExit();
         RecordWriter writer = new SVMLightRecordWriter(out,true);
@@ -81,6 +78,7 @@ public class SVMRecordWriterTest {
             writer.write(record);
 
         writer.close();
+        records.clear();
 
         RecordReader svmReader = new SVMLightRecordReader();
         InputSplit svmSplit = new FileSplit(out);
@@ -88,15 +86,10 @@ public class SVMRecordWriterTest {
         assertTrue(svmReader.hasNext());
         while(svmReader.hasNext()) {
             Collection<Writable> record = svmReader.next();
-            records.add(record);
             assertEquals(5, record.size());
             records.add(record);
-            count++;
         }
-
-
-
-
+        assertEquals(150,records.size());
     }
 
     @Test
